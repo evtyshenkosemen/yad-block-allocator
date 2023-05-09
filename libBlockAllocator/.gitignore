@@ -31,9 +31,8 @@
 *.out
 *.app
 
-# Configs
-.env
+#build dir
+/bin/
 
-#etc
-.vscode
-.DS_Store
+#auto-generated
+/inc/autoconf.h
