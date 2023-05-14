@@ -17,15 +17,16 @@ build:autoconf
 	@echo "${ccgreen}Starting build${ccend}"
 
 	#pack dynamic lib
-	CC -c -fPIC ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
-	CC -shared -o ${BUILD_DIR}/allocator.so ${BUILD_DIR}/allocator.o
+	${CC} -c -fPIC ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
+	${CC} -shared -o ${BUILD_DIR}/allocator.so ${BUILD_DIR}/allocator.o
 	
 	#pack static lib
-	CC ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
-	AR r ${BUILD_DIR}/allocator.a ${BUILD_DIR}/allocator.o
+	${CC} ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
+	${AR} r ${BUILD_DIR}/allocator.a ${BUILD_DIR}/allocator.o
 
 	#spice up  with headers
 	cp ${INCLUDE_DIR}/allocator.h ${BUILD_DIR}/allocator.h
+	cp ${INCLUDE_DIR}/autoconf.h ${BUILD_DIR}/autoconf.h
 
 autoconf:checkconfig
 	@echo "${ccgreen}Build configurated with pool: ${POOL_SIZE}; block: ${BLOCK_SIZE} ${ccend}"
