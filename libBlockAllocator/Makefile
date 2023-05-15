@@ -7,7 +7,7 @@ ccgreen=\033[0;32m
 ccyellow=\033[0;33m
 ccend=\033[0m
 
-all: clean build run
+all: clean build
 
 checkconfig:
 	@echo "${ccyellow}Checking env config ${ccend}"
@@ -21,8 +21,8 @@ build:autoconf
 	${CC} -shared -o ${BUILD_DIR}/allocator.so ${BUILD_DIR}/allocator.o
 	
 	#pack static lib
-	${CC} ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
-	${AR} r ${BUILD_DIR}/allocator.a ${BUILD_DIR}/allocator.o
+	${CC} -c ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
+	${AR} rcs ${BUILD_DIR}/allocator.a ${BUILD_DIR}/allocator.o
 
 	#spice up  with headers
 	cp ${INCLUDE_DIR}/allocator.h ${BUILD_DIR}/allocator.h
@@ -38,7 +38,3 @@ clean:
 	@echo "${ccyellow}Cleaning build dir ${ccend}"
 	rm -rf ./bin/
 	mkdir bin
-
-run:
-	@echo "${ccgreen}Running app ${ccend}"
-	${BUILD_DIR}/allocator.o
