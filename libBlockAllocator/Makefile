@@ -16,12 +16,12 @@ checkconfig:
 build:autoconf
 	@echo "${ccgreen}Starting build${ccend}"
 
+	${CC} -c -fPIC -Wno-format ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
+
 	#pack dynamic lib
-	${CC} -c -fPIC ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
 	${CC} -shared -o ${BUILD_DIR}/allocator.so ${BUILD_DIR}/allocator.o
 	
 	#pack static lib
-	${CC} -c ${SOURCE_DIR}/allocator.c -o ${BUILD_DIR}/allocator.o -I${INCLUDE_DIR}
 	${AR} rcs ${BUILD_DIR}/allocator.a ${BUILD_DIR}/allocator.o
 
 	#spice up  with headers
