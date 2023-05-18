@@ -5,22 +5,6 @@
 
 /* ToDo: Add module desc & doxygen dock */
 /* ToDo: Warning! OS can prevent inter-process memory sharing theoretically */
-/* ToDo: Warning! Project built correct on MacOS:
-
-spc@semyons-mbp yad-block-allocator % gcc --version
-Apple clang version 14.0.0 (clang-1400.0.29.202)
-Target: arm64-apple-darwin22.3.0
-Thread model: posix
-InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-
-*/
-
-int main(int argc, char const *argv[])
-{
-    printf("allocator`s MOCK\n");
-
-    return 0;
-}
 
 int ypool_init(ypool_STC *pool){
     /* prevent already inited pool */
@@ -57,14 +41,14 @@ int yalloc_block(ypool_STC *pool, AD_POINTER *user_block){
 
     if (pool->start_PTR == NULL)
     {
-        ret = -EINVAL;
+        ret = -EINVAL; /* Wrong pool */
         goto error;
     }
 
     /* prevent NOT end of pool */
     if(pool->allocate_PTR == NULL)
     {
-        ret = -ENOMEM;
+        ret = -ENOMEM; /* No memory in pool */
         goto error;
     }
 
@@ -135,14 +119,14 @@ static int yformat(ypool_STC *pool){
     pthread_mutex_lock(&pool->mutex);
     block_PTR = pool->start_PTR;
 
-    for (curr_block_num=0; curr_block_num < (POOL_SIZE/BLOCK_SIZE)-1; curr_block_num++)
+    for (curr_block_num=0; curr_block_num < (pool->pool_size/pool->block_size)-1; curr_block_num++)
     {
         /* decode current block */
         block = (union yblock_UNT*) block_PTR;
         /* set pointer to next block */
-        block->next_block = block_PTR+BLOCK_SIZE;
+        block->next_block = block_PTR+pool->block_size;
 
-        block_PTR += BLOCK_SIZE;
+        block_PTR += pool->block_size;
     }
 
     /* set next as NULL for last block */
@@ -156,10 +140,17 @@ static int yformat(ypool_STC *pool){
 
 static bool yblock_belongs_to_pool(ypool_STC *pool, AD_POINTER *user_block)
 {
+    AD_POINTER    * pool_end;
+    size_t         blocks_in_pool;
+
     if(ypool_check(pool) != 0)
         return false;
 
-    return (pool->start_PTR >= user_block && user_block <= pool->start_PTR + pool->pool_size);
+    blocks_in_pool = pool->pool_size/pool->block_size;
+
+    pool_end = pool->start_PTR + pool->block_size * (blocks_in_pool-1); /* pool_end points to first byte of the last block (not to the last byte of the pool)  */
+
+    return (pool->start_PTR <= *user_block && user_block <= pool_end); /* true if user block is between pool edges */
 }
 
 static int ypool_check(ypool_STC *pool){
@@ -193,7 +184,7 @@ int ypool_print(ypool_STC *pool){
     pthread_mutex_lock(&pool->mutex);
     for (uint32_t curr_block=0; curr_block < blocks_in_pool; curr_block++)
     {
-        printf("========[block: 0x%016x]=========\n", (unsigned int)block_PTR);
+        printf("========[block: 0x%016x]=========\n", block_PTR);
         _yblock_print(block_PTR, pool->block_size);
         printf("============================================\n");
         block_PTR += pool->block_size;

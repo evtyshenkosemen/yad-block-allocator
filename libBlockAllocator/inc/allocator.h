@@ -11,18 +11,18 @@
 typedef void* AD_POINTER; /* find bit depth independent pointer type */
 typedef struct _ypool
 {
-    AD_POINTER       * start_PTR;
+    AD_POINTER         start_PTR;
     size_t             block_size;
     size_t             pool_size;
-    AD_POINTER       * allocate_PTR;
+    AD_POINTER         allocate_PTR;
     pthread_mutex_t    mutex;
     /* ToDo: mb implement free space (if needed quck free space info) */
 }ypool_STC;
 
 union yblock_UNT
 {
-    char          data[BLOCK_SIZE];
-    AD_POINTER    next_block;
+    char          data[BLOCK_SIZE];    /* ToDo: Fixme replace with BLOCK_SIZE_MAX */
+    AD_POINTER    next_block;          /* ToDo: Fixme! We wanted to use a block as next pointer but it limits min block size to pointer size (x64-8) */
 };
 
 /* public funcs */
