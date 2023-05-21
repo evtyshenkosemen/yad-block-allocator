@@ -53,28 +53,34 @@ int test_yalloc_single_thread(){
     /* beleive that failed yallock_block not damaged our pointer */
 
     /* check out of pool bounds free op (upper) */
-    printf("   testing overfreeing (up)\n");
-    our_block+=BLOCK_SIZE; /* make bigger than last allocated block */   
+    printf("   test freeing of block which out the pool (up)\n");
+    our_block+=(BLOCK_SIZE + sizeof(AD_POINTER)); /* make bigger than last allocated block */   
     assert(yfree_block(&pool_one, our_block) == -EXDEV);
-    our_block-=BLOCK_SIZE;  /* make equal to last allocated block */
+    our_block-=(BLOCK_SIZE + sizeof(AD_POINTER));  /* make equal to last allocated block */
     printf("                                           Done!\n");
 
     printf("   freeing blocks\n");
-    for(i = 0; i < POOL_SIZE/BLOCK_SIZE; i++){
+    for(i = 0; i < POOL_SIZE/BLOCK_SIZE; i++){ /* walking to pool start*/
         /* free single block */
         if (VERBOSE) printf("         requesting free block 0x%x op\n", our_block);
         assert(yfree_block(&pool_one, our_block) == 0);
 
-        our_block-=BLOCK_SIZE;
+        our_block-=(BLOCK_SIZE + sizeof(AD_POINTER));
     }
     printf("                                           Done!\n");
 
-    /* check out of pool bounds free op (upper) */
-    printf("   testing overfreeing (down)\n");
+    /* test out of pool bounds free operation (upper) */
+    printf("   test freeing of block which out the pool (down)\n");
     if (VERBOSE) printf("         requesting free block 0x%x op\n", our_block);
     assert(yfree_block(&pool_one, our_block) == -EXDEV);
     printf("                                           Done!\n");
 
+    /* test free operation on already freed block */
+    our_block+=(BLOCK_SIZE + sizeof(AD_POINTER)); /* point to 1st block in pool */
+    printf("   test free operation on already freed block\n");
+    if (VERBOSE) printf("         requesting free block 0x%x op\n", our_block);
+    assert(yfree_block(&pool_one, our_block) == -EALREADY);
+    printf("                                           Done!\n");
     printf("[Single thread test] Passed!\n");
 
     return 0;
@@ -123,7 +129,7 @@ int emulate_pool_usage(ypool_STC * ypool)
     usleep(((rand() % 20)+1) * 1000); /* 1000-20000 ms */
     memset(our_block,0x00,BLOCK_SIZE);
     usleep(((rand() % 20)+1) * 1000); /* 1000-20000 ms */
-    memcpy(our_block,test_set,BLOCK_SIZE);
+    memcpy(our_block,test_set,BLOCK_SIZE); /* ToDo: add pseudo-rand dataset here */
     usleep(((rand() % 20)+1) * 1000); /* 1000-20000 ms */
     assert(memcmp(our_block, test_set, BLOCK_SIZE) == 0);
     if (VERBOSE) printf("                                                                          [thr:0x%x]tested block: 0x%x\n",pthread_self(), our_block);
