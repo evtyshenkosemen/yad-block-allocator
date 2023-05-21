@@ -3,8 +3,25 @@
 #include <stdlib.h>
 #include <memory.h>
 
-/* ToDo: Add module desc & doxygen dock */
-/* ToDo: Warning! OS can prevent inter-process memory sharing theoretically */
+/**
+    \file
+    \brief Block allocator library
+
+    \todo Warning! OS can prevent inter-process memory sharing theoretically
+*/
+
+/**
+    \brief 
+        Used to allocate memory from the pool
+
+    \param[in/out] pool Pointer to the pool to which the operation will be applied
+
+    \return 
+        -EFAULT    - Pool pointer is NULL
+        -EALREADY  - Pool is initialized already
+        -ENOMEM    - There are no free memory in system to allocate it for requested pool
+                 0 - Successfuly initialized pool
+*/
 
 int ypool_init(ypool_STC *pool){
     size_t    blocks_in_pool;
@@ -36,6 +53,20 @@ int ypool_init(ypool_STC *pool){
 
     return 0;
 }
+
+/**
+    \brief 
+        Used to allocate block of memory from the pool
+
+    \param[in] pool Pointer to the pool to which the operation will be applied
+    \param[out] *user_block Pointer to allocated memory
+
+    \return 
+        -EFAULT    - Pool pointer is NULL
+        -EINVAL    - Pool has no pointer to the beginning
+        -ENOMEM    - Pool has no free memory
+                 0 - Successfuly freed user_block
+*/
 
 int yalloc_block(ypool_STC *pool, AD_POINTER *user_block){
     int ret = 0;
@@ -89,12 +120,26 @@ int yalloc_block(ypool_STC *pool, AD_POINTER *user_block){
     return ret;
 }
 
+/**
+    \brief 
+        Used to free single user block & return it to the pool
+
+    \param[in] pool Pointer to the pool to which the operation will be applied
+    \param[in] *user_block Block which needed to free
+
+    \return 
+        -EFAULT    - Pool pointer is NULL
+        -EINVAL    - Pool has no pointer to the beginning
+        -EXDEV     - user_block is not belong the pool
+        -EALREADY  - user_block is marked as free
+                 0 - Successfuly freed user_block
+*/
+
 int yfree_block(ypool_STC *pool, AD_POINTER *user_block){
     int ret;
     yblock_STC *block;
     AD_POINTER user_block_PTR;
     yblock_STC *returned_block;
-    //AD_POINTER prev_next_free_block_PTR; 
 
     ret = ypool_check(pool);
 
@@ -134,17 +179,16 @@ int yfree_block(ypool_STC *pool, AD_POINTER *user_block){
     return ret;
 }
 
-/*
-
+/**
     \brief 
-        Format empty pool as singly linked list
+        Used to format initiated pool to singly linked list
 
-    \details
-        1. Check the pool for validity
-        2. reserved
-        3. Lock pool
-        4. Set block_PTR to the beginning of the pool
+    \param[in] pool Pointer to the pool to which the operation will be applied
 
+    \return 
+        -EFAULT - Pool pointer is NULL
+        -EINVAL - Pool has no pointer to the beginning
+              0 - On success
 */
 
 static int yformat(ypool_STC *pool){
@@ -189,6 +233,19 @@ static int yformat(ypool_STC *pool){
     return 0;
 }
 
+/**
+    \brief 
+        Checks belonging of a user block to the pool
+
+    \details
+
+    \param[in] pool Pointer to the pool to which the operation will be applied
+
+    \return 
+        false - Not belongs to the pool
+        true  - Belongs to the pool
+*/
+
 static bool yblock_belongs_to_pool(ypool_STC *pool, AD_POINTER user_block)
 {
     AD_POINTER      lowest_user_pointer;
@@ -211,7 +268,7 @@ static bool yblock_belongs_to_pool(ypool_STC *pool, AD_POINTER user_block)
     return (lowest_user_pointer <= user_block && user_block <= highest_user_pointer); /* true if user block is between pool edges */
 }
 
-/*
+/**
 
     \brief 
         Validate pool
@@ -242,9 +299,10 @@ static int ypool_check(ypool_STC *pool){
     return 0;
 }
 
-/*
+/**
     \brief Get system block size using user block size
-
+    \param[in] user_block_size User block size
+    \return System block size (user accessed memory + pointer memory)
 */
 
 static size_t sys_block_size(size_t user_block_size){
@@ -254,6 +312,14 @@ static size_t sys_block_size(size_t user_block_size){
 /* Debug funcs */
 #if DEBUG == 1
 
+/**
+    \brief Print decoded pool data
+    \param[in] pool Pointer to the pool to which the operation will be applied
+    \return 
+        -EFAULT - Pool pointer is NULL
+        -EINVAL - Pool has no pointer to the beginning
+              0 - On success
+*/
 int ypool_print(ypool_STC *pool){
     int           ret;
     AD_POINTER    block_PTR;
@@ -280,7 +346,12 @@ int ypool_print(ypool_STC *pool){
     return 0;
 }
 
-/* !!! mutex unsecure func! */
+/**
+    \brief Print decoded block data [Warning!!! mutex unsecure func!]
+    \param[in] block Pointer to the block to which the operation will be applied
+    \param[in] user_block_size User block size
+    \return 0
+*/
 static int _yblock_print(yblock_STC* block, size_t user_block_size){
 
     printf("block->next_block= 0x%016x\n\n",block->next_block);
@@ -291,6 +362,14 @@ static int _yblock_print(yblock_STC* block, size_t user_block_size){
     return 0;
 }
 
+/**
+    \brief Print raw pool data
+    \param[in] pool Pointer to the pool to which the operation will be applied
+    \return 
+        -EFAULT - Pool pointer is NULL
+        -EINVAL - Pool has no pointer to the beginning
+              0 - On success
+*/
 int ypool_print_raw(ypool_STC *pool){
     int           ret;
     AD_POINTER    block_PTR;
@@ -317,6 +396,12 @@ int ypool_print_raw(ypool_STC *pool){
     return 0;
 }
 
+/**
+    \brief Print raw block data [Warning!!! mutex unsecure func!]
+    \param[in] block Pointer to the data
+    \param[in] block_size Size in bytes which needed to print
+    \return 0
+*/
 static int _sysblock_print_raw(AD_POINTER data, size_t block_size){
 
     uint8_t * data_PTR;

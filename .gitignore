@@ -37,3 +37,7 @@
 #etc
 .vscode
 .DS_Store
+
+#doxygen
+libBlockAllocatorDocs/html
+libBlockAllocatorDocs/latex
